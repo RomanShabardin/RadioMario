@@ -17,7 +17,7 @@ const port = process.env.PORT || 3000;
 
 //const { prefix, token } = require('./config.json'); // УДАЛИТЬ
 
-const token = process.env.TOKEN; // Читаем из переменной окружения
+const token = process.env.RAILWAY_TOKEN; // Читаем из переменной окружения
 console.log("Token from environment:", token); // <--- Добавьте эту строку
 
 if (!token) {
