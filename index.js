@@ -15,10 +15,7 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 
-const {
-    prefix,
-    token,
-} = require('./config.json');
+const token = process.env.token;
 
 // Веб-сервер для проверки работы бота
 app.get('/', (req, res) => {
