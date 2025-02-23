@@ -15,7 +15,10 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 
-const token = process.env.token;
+//const { prefix, token } = require('./config.json'); // УДАЛИТЬ
+
+const token = process.env.TOKEN; // Читаем из переменной окружения
+const prefix = process.env.PREFIX || '!'; // Читаем из переменной окружения, если не указано, то используем '!'
 
 // Веб-сервер для проверки работы бота
 app.get('/', (req, res) => {
@@ -54,7 +57,7 @@ client.on('messageCreate', async (message) => {
             musicQueues[guildId] = {
                 audioPlayer: createAudioPlayer(),
                 currentAudioResource: null,
-                currentURL: null,  // Добавлено: сохраняем текущий URL
+                currentURL: null,
                 repeatMode: false,
                 repeatQueueMode: false,
                 queue: [],
@@ -62,13 +65,64 @@ client.on('messageCreate', async (message) => {
                 isPlaying: false,
                 lastMessageChannel: null,
                 voiceConnection: null,
-                cache: {}, // Кэш для путей к файлам
+                reconnecting: false, // Флаг для предотвращения одновременных попыток переподключения
+                cache: {},
             };
-             // Слушаем событие Idle для каждого плеера
+
             musicQueues[guildId].audioPlayer.on(AudioPlayerStatus.Idle, async () => {
                 console.log(`Аудиоплеер Idle на сервере ${guildId}`);
                 await handleIdleState(guildId);
             });
+
+            // Функция для переподключения
+            const attemptReconnect = async () => {
+                if (musicQueues[guildId].reconnecting) return;
+                musicQueues[guildId].reconnecting = true;
+
+                console.log(`Попытка переподключения к голосовому каналу на сервере ${guildId}...`);
+
+                try {
+                    musicQueues[guildId].voiceConnection = joinVoiceChannel({
+                        channelId: message.member.voice.channel.id,
+                        guildId: message.guild.id,
+                        adapterCreator: message.guild.voiceAdapterCreator,
+                        selfDeaf: false,
+                    });
+
+                    musicQueues[guildId].voiceConnection.subscribe(musicQueues[guildId].audioPlayer);
+                    console.log(`Успешно переподключено к голосовому каналу на сервере ${guildId}.`);
+                } catch (error) {
+                    console.error(`Не удалось переподключиться к голосовому каналу на сервере ${guildId}:`, error);
+                    // Повторная попытка через несколько секунд
+                    setTimeout(attemptReconnect, 5000);
+                } finally {
+                    musicQueues[guildId].reconnecting = false;
+                }
+            };
+
+            // Обработчики событий для voiceConnection
+            musicQueues[guildId].voiceConnection = joinVoiceChannel({
+                        channelId: message.member.voice.channel.id,
+                        guildId: message.guild.id,
+                        adapterCreator: message.guild.voiceAdapterCreator,
+                        selfDeaf: false,
+                    });
+
+            musicQueues[guildId].voiceConnection.on('stateChange', (oldState, newState) => {
+                console.log(`VoiceConnection changed from ${oldState.status} to ${newState.status} in guild ${guildId}.`);
+                if (newState.status === VoiceConnectionStatus.Disconnected) {
+                    console.log(`VoiceConnection disconnected in guild ${guildId}. Attempting to reconnect...`);
+                    // Попытка переподключения
+                    attemptReconnect();
+                }
+            });
+
+            musicQueues[guildId].voiceConnection.on('error', (error) => {
+                console.error(`Ошибка VoiceConnection на сервере ${guildId}:`, error);
+                attemptReconnect(); // Попытка переподключения при ошибке
+            });
+
+            return musicQueues[guildId];
         }
         return musicQueues[guildId];
     };
@@ -222,7 +276,7 @@ async function handleIdleState(guildId) {
              queueData.currentAudioResource = createAudioResource(createReadStream(cache[currentURL]));
              audioPlayer.play(queueData.currentAudioResource);
         }
-       
+
     } else if (repeatQueueMode && queue.length === 0) {
         // Если включен режим повтора очереди и очередь пуста, восстанавливаем очередь и играем следующий трек
         console.log(`Повторяем очередь на сервере ${guildId}`);
