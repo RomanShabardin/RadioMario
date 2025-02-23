@@ -1,0 +1,15 @@
+{
+    "version": "5.0.19",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/platformsh/cli/releases/download/5.0.19/platform_5.0.19_windows_amd64.zip",
+            "bin": [
+                "platform.exe"
+            ],
+            "hash": "58fd72ce3aa129bdfceae1fb02bc9b3c15130fb1cca97ca4cbb92c386fbb04ab"
+        }
+    },
+    "homepage": "https://docs.platform.sh/administration/cli.html",
+    "license": "MIT",
+    "description": "Platform.sh CLI"
+}

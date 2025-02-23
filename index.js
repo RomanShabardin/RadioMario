@@ -18,18 +18,13 @@ const port = process.env.PORT || 3000;
 
 //const { prefix, token } = require('./config.json'); // УДАЛИТЬ
 
-console.log("Идет попытка запуска бота...");
-
-const token = process.env.TOKEN;
-
-console.log("Значение токена из переменной окружения:", token);
+const token = process.env.RAILWAY_TOKEN; // Читаем из переменной окружения
+console.log("Token from environment:", token); // <--- Добавьте эту строку
 
 if (!token) {
-    console.error("Ошибка: Токен Discord отсутствует! Установите переменную окружения TOKEN.");
+    console.error("Error: Discord token is missing! Set the TOKEN environment variable.");
     process.exit(1);
 }
-
-console.log("Токен получен. Дальнейшая инициализация не производится для целей отладки.");
 
 // Веб-сервер для проверки работы бота
 app.get('/', (req, res) => {
