@@ -20,10 +20,6 @@ const port = process.env.PORT || 3000;
 const token = process.env.RAILWAY_TOKEN; // Читаем из переменной окружения
 console.log("Token from environment:", token); // <--- Добавьте эту строку
 
-if (!token) {
-    console.error("Error: Discord token is missing! Set the TOKEN environment variable.");
-    process.exit(1);
-}
 
 // Веб-сервер для проверки работы бота
 app.get('/', (req, res) => {
