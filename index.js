@@ -19,7 +19,7 @@ const port = process.env.PORT || 3000;
 //const { prefix, token } = require('./config.json'); // УДАЛИТЬ
 
 const token = process.env.TOKEN; // Читаем из переменной окружения
-console.log("Token from environment:", token); // <--- Добавьте эту строку
+
 
 if (!token) {
     console.error("Error: Discord token is missing! Set the TOKEN environment variable.");
